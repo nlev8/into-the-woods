@@ -73,6 +73,10 @@ images[index] → ctx.drawImage(cover-fit)`. Overlay opacities computed from the
 ### 4b. AI-video production kit (this repo as deliverable; runs in Higgsfield)
 
 - **`production/SHOTLIST.md`** — the guide the user follows in Higgsfield:
+  - **Image-first (image-to-video):** generate keyframe **stills** for each beat with an
+    image model (Gemini/Imagen, Midjourney, or Flux) to lock the look, then animate each
+    still as a **start frame** (or **start+end-frame interpolation**) in Higgsfield/Seedance —
+    not raw text-to-video — for consistency and art-directable framing.
   - Exact prompts for a **slow forward-dolly** travel through a misty forest to a cottage,
     using Higgsfield's camera-motion controls (push-in / dolly).
   - **Continuity via chaining:** generate the journey as a few clips, using each clip's
