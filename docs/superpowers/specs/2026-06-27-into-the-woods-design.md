@@ -8,43 +8,45 @@
 
 A single-page, full-viewport experience: as the user scrolls, they travel through a
 foggy forest that **evolves from mundane → magical**, arriving at a glowing cottage.
-The visuals are a **pre-rendered, path-traced (Blender Cycles) flythrough** scrubbed
+The visuals are **pre-rendered photoreal AI video** (Higgsfield platform — using its
+cinematic camera-motion controls — with an engine such as Seedance or Kling) scrubbed
 frame-by-frame to scroll progress. The magical evolution (fog lifting, glowing
-mushrooms, fae lights/fireflies, lit cottage windows) is **baked into the render**.
+mushrooms, fae lights/fireflies, lit cottage windows) is **prompted into the footage**.
 
-The pixels are produced offline for maximum photorealism; the web app is a precise
-**scroll-driven frame player** plus synced text overlays.
+The pixels are produced outside this codebase for maximum photorealism; the web app is
+a precise **scroll-driven frame player** plus synced text overlays.
 
 ## 2. Goals / Non-Goals
 
 **Goals**
 - A buttery, frame-accurate scroll-scrub player for a photoreal image sequence.
-- Mundane→magical narrative conveyed by the baked render + 2–3 synced text beats.
-- Fully working and verifiable **today** using placeholder frames; the real render
+- Mundane→magical narrative conveyed by the footage + 2–3 synced text beats.
+- Fully working and verifiable **today** using placeholder frames; the real footage
   drops in later with zero code changes.
-- A Blender scaffold (script + guide) so the photoreal render can be produced.
+- An AI-video production kit (shot list + prompts + frame-extraction script) so the
+  photoreal footage can actually be produced by the user with no 3D skills.
 
 **Non-Goals (YAGNI)**
 - No interactivity / free-roam camera (inherent cost of pre-rendering — accepted).
 - No backend, auth, SSR, CMS, or analytics.
 - No real-time 3D lighting of the hero scene (the low-poly R3F scene exists **only**
   to generate placeholder frames, not as the final look).
-- We do **not** produce the photoreal render in code — that is an external Blender task.
+- We do **not** generate the photoreal video in code — that is produced in Higgsfield.
 
 ## 3. Stack
 
 - **Vite + React + TypeScript** (pure client-side, static deploy).
 - **@react-three/fiber + three** — only for the placeholder-frame generator scene.
 - **lenis** — smooth scroll feeding the scrub.
-- No drei/postprocessing required for the player itself (the look is in the render).
+- No Blender, no drei/postprocessing required for the player (the look is in the footage).
 
 ## 4. Architecture
 
 Two decoupled halves joined by a **frame contract**:
 
 ```
-[ Blender Cycles render ]  --frames + manifest-->  [ Web ScrollSequence player ]
-   (external, you/artist)        (the contract)         (this repo, I build)
+[ Higgsfield/Seedance video ] --ffmpeg--> frames + manifest --> [ ScrollSequence player ]
+   (external, user produces)      (extract)   (the contract)      (this repo, I build)
 ```
 
 ### 4a. Web player (this repo, built now)
@@ -68,19 +70,19 @@ Units, each with one responsibility:
 images[index] → ctx.drawImage(cover-fit)`. Overlay opacities computed from the same
 `progress` in the scroll handler.
 
-### 4b. Blender scaffold (this repo as deliverable; runs externally)
+### 4b. AI-video production kit (this repo as deliverable; runs in Higgsfield)
 
-- **`blender/render_flythrough.py`** — Blender Python:
-  - Camera constrained to an animated path curve, `frame 1..N`.
-  - Cycles + denoise; output `frames/####.webp` at the contract resolution.
-  - **Baked evolution:** keyframe fog/volume density, key-light energy/color, emission
-    strength of mushrooms + cottage windows, and firefly particle count across the
-    timeline (mundane at frame 1 → magical at frame N).
-  - Writes/refreshes `manifest.json`.
-- **`blender/README.md`** — production guide: photoreal asset sources (Poly Haven,
-  Quixel Megascans via Fab, BlenderKit — explicitly not low-poly packs), how to run the
-  script, the evolution recipe, and the handoff (copy `frames/` + `manifest.json` into
-  `public/cottage/`).
+- **`production/SHOTLIST.md`** — the guide the user follows in Higgsfield:
+  - Exact prompts for a **slow forward-dolly** travel through a misty forest to a cottage,
+    using Higgsfield's camera-motion controls (push-in / dolly).
+  - **Continuity via chaining:** generate the journey as a few clips, using each clip's
+    **last frame as the next clip's start frame** to extend into one continuous travel.
+  - **Baked evolution:** the mundane→magical arc spread across the chained clips
+    (clip 1 grey/misty → final clip glowing mushrooms, fireflies, lit windows).
+  - Output target: a single stitched video (or ordered clips) at the contract resolution.
+- **`scripts/extract-frames.sh`** — `ffmpeg` command that extracts the video to
+  `public/cottage/frames/####.webp` at the contract frame count/resolution and writes
+  `manifest.json`. Includes the mobile (downscaled) variant.
 
 ### 4c. Frame contract (decouples the halves)
 
@@ -90,14 +92,14 @@ images[index] → ctx.drawImage(cover-fit)`. Overlay opacities computed from the
   { "frameCount": 180, "width": 1600, "height": 900, "ext": "webp", "fps": 30 }
   ```
 - **Defaults:** ~180 frames; 1600×900 desktop, 800×450 mobile (`public/cottage/mobile/`).
-- The player reads only the manifest — re-render anytime; nothing in code changes.
+- The player reads only the manifest — re-extract anytime; nothing in code changes.
 
 ## 5. Placeholder frames (build-now validation)
 
-A dev-only script captures the existing low-poly forest scene (ported from the Opticlaw
+A dev-only script captures a simple low-poly forest scene (ported from the Opticlaw
 prototype) at N scroll steps via headless browser → writes `public/cottage/frames/####.webp`
 + `manifest.json`. This proves scrubbing, easing, preloader, overlays, and perf
-end-to-end before any Blender render exists.
+end-to-end before any Higgsfield footage exists.
 
 ## 6. Performance & fallbacks
 
@@ -115,15 +117,18 @@ end-to-end before any Blender render exists.
 
 ## 8. Risks / tradeoffs
 
+- **AI-video camera/continuity:** a single clip is short and camera control is approximate
+  — mitigated by Higgsfield's camera presets + last-frame chaining into one continuous
+  travel; the dreamy mood tolerates minor drift.
 - **Asset weight** vs. quality — mitigated by WebP, preloader, mobile set, tunable
   frame count/resolution.
 - **Fixed path** — accepted; it is the price of max photorealism.
-- **The look depends entirely on the external render** — the web player is
-  render-agnostic; we validate mechanics with placeholders.
-- **Video alternative** (single file, `currentTime` scrub) was rejected: jank/seek
-  unreliability on iOS Safari. Image sequence chosen for frame accuracy.
+- **The look depends entirely on the external footage** — the web player is
+  source-agnostic; we validate mechanics with placeholders.
+- **Video alternative** (scrub `<video>` directly) was rejected: jank/seek unreliability
+  on iOS Safari. We extract to an image sequence for frame accuracy.
 
 ## 9. Out of scope
 
 Interactivity, audio, multiple scenes/routes, CMS, deploy automation (manual static
-deploy is fine), and producing the photoreal render itself.
+deploy is fine), and producing the photoreal footage itself.
