@@ -34,3 +34,13 @@ input { font-family: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { .candle-flame { animation: none; } }
 
+/* Responsive nav: inline links on desktop, hamburger menu on mobile */
+.nav-links { display: flex; align-items: center; gap: clamp(14px, 2vw, 26px); }
+.nav-burger { display: none; }
+.nav-menu { display: none; }
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-burger { display: flex; }
+  .nav-menu.open { display: flex; }
+}
+
