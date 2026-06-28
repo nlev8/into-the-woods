@@ -5,3 +5,4 @@ dist/
 .superpowers/
 verify-out/
 public/cottage/segments/
+.vercel
