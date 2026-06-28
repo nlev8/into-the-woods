@@ -1,0 +1,7 @@
+public/cottage/segments/
+.env.local
+node_modules
+dist
+verify-out
+.superpowers
+_*.mjs

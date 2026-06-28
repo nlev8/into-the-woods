@@ -3,6 +3,5 @@ dist/
 .DS_Store
 *.local
 .superpowers/
-public/cottage/frames/
-public/cottage/mobile/frames/
 verify-out/
+public/cottage/segments/

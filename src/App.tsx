@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { ScrollSequence } from "./sequence/ScrollSequence";
+import { Nav } from "./site/Nav";
+import { Sections } from "./site/Sections";
 
 export default function App() {
   const base = useMemo(() => {
@@ -7,5 +9,14 @@ export default function App() {
     const mobile = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
     return mobile ? "/cottage/mobile" : "/cottage";
   }, []);
-  return <ScrollSequence base={base} />;
+
+  return (
+    <>
+      <Nav />
+      <div id="top">
+        <ScrollSequence base={base} pages={6} />
+      </div>
+      <Sections />
+    </>
+  );
 }
