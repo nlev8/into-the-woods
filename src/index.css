@@ -44,3 +44,11 @@ input { font-family: inherit; }
   .nav-menu.open { display: flex; }
 }
 
+/* Product card hover micro-interactions (desktop pointers only) */
+.candle-card { transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .35s; }
+.candle-card img { transition: transform .55s cubic-bezier(.22,1,.36,1); }
+@media (hover: hover) {
+  .candle-card:hover { transform: translateY(-6px); border-color: rgba(230,178,122,0.45); }
+  .candle-card:hover img { transform: scale(1.05); }
+}
+
